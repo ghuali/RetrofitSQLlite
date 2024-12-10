@@ -41,38 +41,90 @@ https://developer.android.com/training/data-storage/sqlite?hl=es-419
 
 Se muestra un ejemplo de los módulos necesarios, la clase, el objeto con los parámetros, Oncreate para crearla y OnUpgrade para actualizarla
 
-![image](https://github.com/user-attachments/assets/a622a248-c254-4bc2-82fe-2ce3bd6efc94)
+```kotlin
+import android.content.ContentValues
+import android.content.Context
+import android.database.Cursor
+import android.database.sqlite.SQLiteDatabase
+import android.database.sqlite.SQLiteOpenHelper
+
+class DBHelper(context: Context, factory: SQLiteDatabase.CursorFactory? = null) :
+    SQLiteOpenHelper(context, DATABASE_NAME, factory, DATABASE_VERSION) {
+
+    override fun onCreate(db: SQLiteDatabase) {
+
+        val query = ("CREATE TABLE " + TABLE_NAME + " ("
+                + ID_COL + " INTEGER PRIMARY KEY, " +
+                NAME_COl + " TEXT," +
+                AGE_COL + " TEXT" + ")")
+
+        db.execSQL(query)
+    }
+
+    override fun onUpgrade(db: SQLiteDatabase, p1: Int, p2: Int) {
+
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME)
+        onCreate(db)
+    }
+```
 
 ### Cómo ingresar información en una base de datos
 
 ```kotlin
-val db = MyDatabaseHelper(context).writableDatabase
-val values = ContentValues().apply {
-    put("name", "Angel")
-    put("age", 20)
-}
-db.insert("Users", null, values)
+fun addName(name : String, age : String ){
+
+        val values = ContentValues()
+
+        values.put(NAME_COl, name)
+        values.put(AGE_COL, age)
+
+        val db = this.writableDatabase
+
+        db.insert(TABLE_NAME, null, values)
+
+        db.close()
+    }   
+
+    fun getName(): Cursor? {
+
+        val db = this.readableDatabase
+
+        return db.rawQuery("SELECT * FROM " + TABLE_NAME, null)
+    }
 ```
 
-### Cómo leer información de una base de datos
 
-```kotlin
-val cursor = db.query("Users", null, null, null, null, null, null)
-while (cursor.moveToNext()) {
-    val name = cursor.getString(cursor.getColumnIndexOrThrow("name"))
-    val age = cursor.getInt(cursor.getColumnIndexOrThrow("age"))
-}
-cursor.close()
-```
 ### Cómo borrar información de una base de datos
 ```kotlin
-db.delete("Users", "name = ?", arrayOf("Angel"))
+ fun deleteName(id: String): Boolean {
+        val db = this.writableDatabase
+
+        // Establecemos la condición para eliminar el registro
+        val whereClause = "$ID_COL = ?"
+        val whereArgs = arrayOf(id)
+
+        // Ejecutamos el DELETE en la base de datos
+        val rowsDeleted = db.delete(TABLE_NAME, whereClause, whereArgs)
+
+        db.close()
+
+        // Retornamos true si se eliminó al menos una fila
+        return rowsDeleted > 0
+    }
 ```
 
 ### Cómo actualizar una base de datos
 ```kotlin
-val values = ContentValues().apply {
-    put("age", 21)
-}
-db.update("Users", values, "name = ?", arrayOf("Angel"))
+fun updateName(id: String, newName: String, newAge: String): Boolean {
+        val db = this.writableDatabase
+        val values = ContentValues().apply {
+            put(NAME_COl, newName)
+            put(AGE_COL, newAge)
+        }
+
+        val rowsUpdated = db.update(TABLE_NAME, values, "$ID_COL = ?", arrayOf(id))
+        db.close()
+
+        return rowsUpdated > 0
+    }
 ```
