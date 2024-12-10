@@ -40,4 +40,39 @@ SQLite es una base de datos ligera integrada en Android que facilita el almacena
 https://developer.android.com/training/data-storage/sqlite?hl=es-419
 
 Se muestra un ejemplo de los módulos necesarios, la clase, el objeto con los parámetros, Oncreate para crearla y OnUpgrade para actualizarla
+
 ![image](https://github.com/user-attachments/assets/a622a248-c254-4bc2-82fe-2ce3bd6efc94)
+
+### Cómo ingresar información en una base de datos
+
+```kotlin
+val db = MyDatabaseHelper(context).writableDatabase
+val values = ContentValues().apply {
+    put("name", "Angel")
+    put("age", 20)
+}
+db.insert("Users", null, values)
+```
+
+### Cómo leer información de una base de datos
+
+```kotlin
+val cursor = db.query("Users", null, null, null, null, null, null)
+while (cursor.moveToNext()) {
+    val name = cursor.getString(cursor.getColumnIndexOrThrow("name"))
+    val age = cursor.getInt(cursor.getColumnIndexOrThrow("age"))
+}
+cursor.close()
+```
+### Cómo borrar información de una base de datos
+```kotlin
+db.delete("Users", "name = ?", arrayOf("Angel"))
+```
+
+### Cómo actualizar una base de datos
+```kotlin
+val values = ContentValues().apply {
+    put("age", 21)
+}
+db.update("Users", values, "name = ?", arrayOf("Angel"))
+```
